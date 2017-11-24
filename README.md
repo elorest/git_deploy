@@ -8,7 +8,7 @@ clone, cd and run make :)
 
 ## Usage
 
-`git_deploy -r production deploy@example.com:/home/deploy/crystalweb`
+`git_deploy -r production -e 'PORT=80 AMBER_ENV=production' deploy@example.com:/home/deploy/crystalweb`
 
 ## Contributing
 
