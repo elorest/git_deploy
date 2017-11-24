@@ -22,7 +22,7 @@ module GitDeploy
       host, path = args.path.split(":")
       `ssh #{host} -t 'bash -c "mkdir -p #{path} && cd #{path} && git init && git config receive.denyCurrentBranch ignore"'`
       app_file = Dir.glob("src/*.cr").first
-      app_binary = app_file.sub(".cr", "") 
+      app_binary = app_file.split("/").last.sub(".cr", "")
       githook = Tempfile.open("post-receive") do |file|
         file.print <<-GITHOOK
         #!/bin/bash
@@ -64,8 +64,8 @@ module GitDeploy
 
         if [ -z "${oldrev//0}" ]; then
           # this is the first push; this branch was just created
-          mkdir -p log tmp
-          chmod 0775 log tmp
+          mkdir -p log tmp bin
+          chmod 0775 log tmp bin
           touch $logfile
           chmod 0664 $logfile
 
@@ -75,19 +75,25 @@ module GitDeploy
           # log timestamp
           echo ==== $(date) ==== >> $logfile
           shards install
-          if [-f bin/amber]; then
+          if [ -f bin/amber ]; then
             echo "amber already installed"
           else
-            crystal build lib/amber/src/cli.cr -o bin/amber
+            crystal build lib/amber/src/amber/cli.cr -o bin/amber
           fi
-          ./bin/amber db create migrate
-
-          crystal build #{app_file} --release --no-debug
-          [ -f #{app_binary} ] && ./#{app_binary} >> log/production.log & $! > tmp/#{app_binary}.pid
+          echo "migrating..."
+          ./bin/amber db create migrate || true
+          echo "building application in release mode"
+          crystal build #{app_file} --release --no-debug -o bin/#{app_binary}
+          old_pid=`cat tmp/#{app_binary}.pid`
+          echo "killing old process"
+          kill -9 $old_pid  # Move after start line if PORT_REUSE is on.
+          [ -x bin/#{app_binary} ] && ./bin/#{app_binary} >> log/production.log & echo $! > tmp/#{app_binary}.pid
         fi
         GITHOOK
       end 
 
+      system("vim #{githook.path}")
+      
       `scp #{githook.path} #{args.path}/.git/hooks/post-receive`
       `ssh #{host} -t 'chmod u+x #{path}/.git/hooks/post-receive'`
     end
