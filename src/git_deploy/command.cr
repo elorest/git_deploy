@@ -9,6 +9,7 @@ module GitDeploy
     class Options
       arg "path", desc: "ssh path. Example: deploy@example.com:/home/deploy/www/website", required: true
       string ["-r", "--remote"], desc: "deployment remote for git. Default: production", default: "production"
+      string ["-e", "--environment"], desc: "environment", default: "AMBER_ENV=production"
     end
 
     class Help
@@ -16,14 +17,18 @@ module GitDeploy
     end
 
     def run
+      puts "Make sure that you have setup a non-root user on the server and added your public key to authorized_keys."
       `git remote add #{options.remote} "#{args.path}"`
       host, path = args.path.split(":")
       `ssh #{host} -t 'bash -c "mkdir -p #{path} && cd #{path} && git init && git config receive.denyCurrentBranch ignore"'`
-
+      app_file = Dir.glob("src/*.cr").first
+      app_binary = app_file.sub(".cr", "") 
       githook = Tempfile.open("post-receive") do |file|
         file.print <<-GITHOOK
         #!/bin/bash
         set -e
+
+        #{args.environment.split(" ").map{|e| "export #{e}"}.join("\n")}
 
         if [ "$GIT_DIR" = "." ]; then
           # The script has been called as a hook; chdir to the working copy
@@ -56,26 +61,29 @@ module GitDeploy
         git reset --hard
 
         logfile=log/deploy.log
-        restart=tmp/restart.txt
 
         if [ -z "${oldrev//0}" ]; then
           # this is the first push; this branch was just created
           mkdir -p log tmp
           chmod 0775 log tmp
-          touch $logfile $restart
-          chmod 0664 $logfile $restart
+          touch $logfile
+          chmod 0664 $logfile
 
           # init submodules
           git submodule update --recursive --init 2>&1 | tee -a $logfile
-
-          # execute the one-time setup hook
-          [ -x deploy/setup ] && deploy/setup $oldrev $newrev 2>&1 | tee -a $logfile
         else
           # log timestamp
           echo ==== $(date) ==== >> $logfile
+          shards install
+          if [-f bin/amber]; then
+            echo "amber already installed"
+          else
+            crystal build lib/amber/src/cli.cr -o bin/amber
+          fi
+          ./bin/amber db create migrate
 
-          # execute the main deploy hook
-          [ -x deploy/after_push ] && deploy/after_push $oldrev $newrev 2>&1 | tee -a $logfile
+          crystal build #{app_file} --release --no-debug
+          [ -f #{app_binary} ] && ./#{app_binary} >> log/production.log & $! > tmp/#{app_binary}.pid
         fi
         GITHOOK
       end 
