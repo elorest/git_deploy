@@ -6,6 +6,10 @@ Easily set up deploy scripts using githooks.
 
 clone, cd and run make :)
 
+### OSX Homebrew
+
+`brew install elorest/crystal/git_deploy`
+
 ## Usage
 
 `git_deploy -r production -e 'PORT=80 AMBER_ENV=production' deploy@example.com:/home/deploy/crystalweb`
