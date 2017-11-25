@@ -74,20 +74,32 @@ module GitDeploy
         else
           # log timestamp
           echo ==== $(date) ==== >> $logfile
+
+          ################################################################################
+          ####  BEGIN: Amberframework specific Code                                  #####
+          ################################################################################
+
           shards install
+
           if [ -f bin/amber ]; then
             echo "amber already installed"
           else
             crystal build lib/amber/src/amber/cli.cr -o bin/amber
           fi
+
           echo "migrating..."
           ./bin/amber db create migrate || true
           echo "building application in release mode"
           crystal build #{app_file} --release --no-debug -o bin/#{app_binary}
           old_pid=`cat tmp/#{app_binary}.pid`
-          echo "killing old process"
-          kill -9 $old_pid  # Move after start line if PORT_REUSE is on.
-          [ -x bin/#{app_binary} ] && ./bin/#{app_binary} >> log/production.log & echo $! > tmp/#{app_binary}.pid
+          echo "killing old process..."
+          kill -9 $old_pid || true # Move after start line if PORT_REUSE is on.
+          nohup ./bin/#{app_binary} >> log/production.log 2>&1 & 
+          echo $! > tmp/#{app_binary}.pid
+
+          ################################################################################
+          ####  END: Amberframework specific Code                                    #####
+          ################################################################################
         fi
         GITHOOK
       end 
