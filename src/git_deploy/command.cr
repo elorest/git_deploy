@@ -92,8 +92,9 @@ module GitDeploy
           echo "building application in release mode"
           crystal build #{app_file} --release --no-debug -o bin/#{app_binary}
           old_pid=`cat tmp/#{app_binary}.pid`
-          echo "killing old process..."
+          echo "Killing old process..."
           kill -9 $old_pid || true # Move after start line if PORT_REUSE is on.
+          echo "Starting application..."
           nohup ./bin/#{app_binary} >> log/production.log 2>&1 & 
           echo $! > tmp/#{app_binary}.pid
 
