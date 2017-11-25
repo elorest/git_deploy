@@ -16,6 +16,20 @@ clone, cd and run make :)
 
 `git_deploy -r production -e 'PORT=80 AMBER_ENV=production' deploy@example.com:/home/deploy/crystalweb`
 
+```sh
+> git_deploy
+command [OPTIONS] PATH
+
+Arguments:
+  PATH  ssh path. Example: deploy@example.com:/home/deploy/www/website
+
+Options:
+  -e, --environment  environment
+                     (default: AMBER_ENV=production)
+  -r, --remote       deployment remote for git. Default: production
+                     (default: production)
+```
+
 ## Contributing
 
 1. Fork it ( https://github.com/elorest/git_deploy/fork )
