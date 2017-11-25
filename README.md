@@ -14,8 +14,6 @@ clone, cd and run make :)
 
 ## Usage
 
-`git_deploy -r production -e 'PORT=80 AMBER_ENV=production' deploy@example.com:/home/deploy/crystalweb`
-
 ```sh
 > git_deploy
 command [OPTIONS] PATH
@@ -29,6 +27,10 @@ Options:
   -r, --remote       deployment remote for git. Default: production
                      (default: production)
 ```
+
+#### Example:
+
+`git_deploy -r production -e 'PORT=80 AMBER_ENV=production' deploy@example.com:/home/deploy/crystalweb`
 
 ## Contributing
 
