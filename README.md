@@ -4,11 +4,13 @@ Easily set up deploy scripts using githooks.
 
 ## Installation
 
-clone, cd and run make :)
-
-### OSX Homebrew
+#### OSX Homebrew
 
 `brew install elorest/crystal/git_deploy`
+
+#### Everything Else
+
+clone, cd and run make :)
 
 ## Usage
 
