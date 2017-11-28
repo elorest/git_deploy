@@ -7,6 +7,7 @@ install: build link
 build:
 	@echo "Building git_deploy in $(shell pwd)"
 	@mkdir -p $(OUT_DIR)
+	@shards
 	@crystal build -o $(OUT_DIR)/git_deploy src/git_deploy.cr -p --no-debug
 
 run:
