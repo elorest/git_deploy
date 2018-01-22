@@ -91,6 +91,7 @@ module GitDeploy
           ./bin/amber db create migrate || true
           echo "building application in release mode"
           crystal build #{app_file} --release --no-debug -o bin/#{app_binary}
+          sudo setcap CAP_NET_BIND_SERVICE=+eip `pwd`/bin/#{app_binary}
           old_pid=`cat tmp/#{app_binary}.pid`
           echo "Killing old process..."
           kill -9 $old_pid || true # Move after start line if PORT_REUSE is on.
