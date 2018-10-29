@@ -10,7 +10,9 @@ Easily set up deploy scripts using githooks.
 
 #### Everything Else
 
-clone, cd and run make :)
+`git clone https://github.com/elorest/git_deploy.git`
+`cd git_clone`
+`make`
 
 ## Usage
 
